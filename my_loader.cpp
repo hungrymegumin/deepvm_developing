@@ -141,7 +141,6 @@ static void load_type_section(const char* p, WASMModule* module) {
 
 //读取函数段
 static void load_func_section(const char* p, WASMModule* module, const char* p_code) {
-	cout << (void*)p << endl;
 	int           func_count      = read_leb_u32((char**)&p);
 	int           code_func_count = read_leb_u32((char**)&p_code);
 	int           type_index, code_size, local_set_count;
