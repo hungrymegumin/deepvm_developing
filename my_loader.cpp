@@ -146,6 +146,7 @@ static void load_func_section(const char* p, WASMModule* module, const char* p_c
 	int           type_index, code_size, local_set_count;
 	WASMFunction* func;
 	LocalVars*    local_set;
+	const char* p_code_temp;
 	if (func_count == code_func_count) {
 		module->function_count = func_count;
 		module->func_section   = (WASMFunction**)malloc(func_count * sizeof(WASMFunction*));
@@ -155,9 +156,12 @@ static void load_func_section(const char* p, WASMModule* module, const char* p_c
 			memset(func, 0, sizeof(WASMFunction));
 			type_index      = read_leb_u32((char**)&p);
 			code_size       = read_leb_u32((char**)&p_code);
+			p_code_temp = p_code;
+			cout << code_size << endl;
 			func->func_type = module->type_section[type_index];
 			func->code_size = code_size;
 			local_set_count = read_leb_u32((char**)&p_code);
+			cout << local_set_count << endl;
 			if (local_set_count == 0) {
 				func->localvars = NULL;
 			} else {
@@ -169,6 +173,7 @@ static void load_func_section(const char* p, WASMModule* module, const char* p_c
 				}
 			}
 			func->code_begin = (char*)p_code;
+			p_code = p_code_temp + code_size;
 		}
 	}
 }
