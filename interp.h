@@ -7,6 +7,7 @@
 
 #endif //C___PROJECTS_INTERP_H
 
+#include "stdlib.h"
 //帧
 struct DEEPInterpFrame {  //DEEP帧
 
@@ -19,7 +20,7 @@ struct DEEPInterpFrame {  //DEEP帧
 } DEEPInterpFrame;
 
 //操作数栈
-typedef struct DeepStack{
+typedef struct DEEPStack{
     int capacity;
     int *sp;
 } DEEPStack;
@@ -36,9 +37,9 @@ typedef struct DEEPExecEnv {
 } DEEPExecEnv;
 
 
-DeepStack stack_cons(){
+DEEPStack stack_cons(){
     //创建操作数栈
-    DeepStack stack;
+    DEEPStack stack;
     stack.capacity=100;
     stack.sp=(int*)malloc(sizeof(int));
     return stack;
