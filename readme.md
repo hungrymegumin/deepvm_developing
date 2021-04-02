@@ -37,3 +37,4 @@ call_main(为main函数创建帧，执行main函数)
 2. [在线wasm2wat](https://webassembly.github.io/wabt/demo/wasm2wat/)
 
    
+##### Example中为实现的简单计算实例，example.cpp为源c语言程序，经由c2wat可得到example.wasm
