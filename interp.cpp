@@ -88,7 +88,7 @@ int call_main(DEEPExecEnv* current_env, DEEPModule* module){
 
 int main() {
     //创建操作数栈
-    DeepStack stack = stack_cons();
+    DEEPStack stack = stack_cons();
 
     //先声明环境并初始化
     DEEPExecEnv deep_env;
