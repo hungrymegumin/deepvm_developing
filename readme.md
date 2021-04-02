@@ -3,7 +3,7 @@
 ---
 
 ```
-DeepStack(操作数栈)
+DEEPStack(操作数栈)
 DEEPInterpFrame(函数帧)
 DEEPExecEnv(运行环境)
 DEEPModule(从loader得到的module)
