@@ -58,6 +58,12 @@ void exec_instructions(DEEPExecEnv* env){
                 *(sp++) = temp;
                 break;
         }
+
+        //检查操作数栈是否溢出
+        if(sp > env->sp_end){
+            printf("%s","warning! Operand stack overflow!");
+            break;
+        }
     }
     //更新env
     env->sp=sp;
@@ -93,7 +99,7 @@ int main() {
     //先声明环境并初始化
     DEEPExecEnv deep_env;
     DEEPExecEnv* current_env=&deep_env;
-    current_env->deep_stack_size=stack.capacity;
+    current_env->sp_end=stack.sp_end;
     current_env->sp=stack.sp;
 
     //创建module，简单加减乘除只用到一个module
@@ -101,6 +107,6 @@ int main() {
 
     int ans = call_main(current_env,module);
 
-    cout<<ans;
+    printf("%d",ans);
 
 }
