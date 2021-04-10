@@ -1,6 +1,6 @@
 # A Brief Introduction of Deepvm
 
-Deepvm is the a virtual machine, as the backend of DeepLang, a new language for IoT device.
+Deepvm is a virtual machine, as the backend of DeepLang, a new language for IoT device.
 
 Our goal is to make the WebAssembly IR run on the virtual machine.
 
