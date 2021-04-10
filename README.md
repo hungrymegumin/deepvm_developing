@@ -1,46 +1,12 @@
-## 功能介绍
+# A Brief Introduction of Deepvm
 
-my_loader.cpp实现了解析.wasm二进制文件，目前能够做到将类型段，函数段以及代码段解析出来，并存入相应的数据结构。
+Deepvm is the a virtual machine, as the backend of DeepLang, a new language for IoT device.
 
-## 主要数据结构
+Our goal is to make the WebAssembly IR run on the virtual machine.
 
-`WASMType`
+At present, our project is still in the initial stage of development. We support a limited set of introductions, including addition, subtraction, multiplication and division, etc.
 
-`LocalVars`
+In the future, we will support more instructions according to the needs of the Deeplang.
 
-`WASMFuntion`
 
-`WASMModule`
 
-`section_listnode `
-
-## 主要函数
-
-`static int read_leb_u32(char** p)`
-
-`static bool check_magic_number_and_version(char** p)`
-
-` static bool create_section_list(const char** p, int *size*, section_listnode* section_list) `
-
-`static void load_type_section(const char* p, WASMModule* module)`
-
-` static void load_func_section(const char* p, WASMModule* module, const char* p_code) `
-
-` static void load_from_sections(WASMModule* module, section_listnode* section_list) `
-
-`static WASMModule* load(char** p, int size)`
-
-`int main()`    函数入口
-
-## 与之前实现的区别
-
-+ 简化了module的数据结构，使之结构更加清晰，移除了结构体内不必要的成员变量，减少了内存消耗
-+ 相当多的安全性验证没有实现
-+ 内存泄漏问题(2021.3.31已修复）
-
-## 接下来的目标
-
-+ 实现对其他section的解析
-+ 增加安全校验
-+ 解决内存泄漏问题(2021.3.31已修复）
-+ 完善代码注释
