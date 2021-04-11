@@ -35,6 +35,12 @@ static bool check_magic_number_and_version(char** p) {
 	return false;
 }
 
+static char* str_gen(const char* p, int len) {
+	char* str = (char*)malloc(len + 1);
+	memcpy(str, p, len);
+	str[len] = '\0';
+}
+
 //解析出每个section的开始和大小和类型，拉成一个链表， 从第二项开始存
 static bool create_section_list(const char** p, int size, section_listnode* section_list) {
 	const char *buf = *p, *buf_end = buf + size;
@@ -125,8 +131,18 @@ static void decode_func_section(const char* p, DEEPModule* module, const char* p
 //读取导出段
 static void decode_export_section(const char* p, DEEPModule* module) {
 	int export_count = read_leb_u32((char**)&p);
+	int name_len;
+	DEEPExport* Export; //"export"在c++中是一个关键字，所以不能用export
+	module->export_count = export_count;
+	module->export_section = (DEEPExport**)malloc(export_count * sizeof(DEEPExport*));
+
 	for (int i = 0; i < export_count; i ++) {
-		
+		Export = module->export_section[i] = (DEEPExport*)malloc(sizeof(DEEPExport));
+		name_len = read_leb_u32((char**)&p);
+		Export->name = str_gen(p, name_len);
+		p += name_len;
+		Export->tag = READ_CHAR(p);
+		Export->index = read_leb_u32((char**)&p);
 	}
 }
 
@@ -220,9 +236,6 @@ int main() {
 	int         file;
 	int         size;
 	file = open(path, O_RDONLY);
-	if (file < 0) {
-		cout << "open fail" << endl;
-	}
 	size = (int)read(file, p, 1024);
 	DEEPModule* module = deep_load(&p, size);
 }

@@ -67,6 +67,7 @@ typedef struct DEEPModule
     int export_count;
     DEEPType **type_section;
     DEEPFunction **func_section;
+    DEEPExport **export_section;
 } DEEPModule;
 
 //the difinition of listnode
