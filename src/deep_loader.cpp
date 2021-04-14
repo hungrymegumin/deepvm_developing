@@ -12,7 +12,7 @@
 #define READ_CHAR(p) READ_VALUE(char, p)
 
 //解码一个无符号32位或64整型，目前只会用到32位类型,在大多数实现中占5个字节
-static int read_leb_u32(char** p) {
+int read_leb_u32(char** p) {
 	char* buf = *p;
 	int   res = 0;
 	for (int i = 0; i < 7; i++) {
@@ -206,8 +206,8 @@ static void decode_each_sections(DEEPModule* module, section_listnode* section_l
 	}
 }
 
-//load
-static DEEPModule* deep_load(char** p, int size) {
+
+ DEEPModule* deep_load(char** p, int size) {
 	if (!check_magic_number_and_version(p))
 		return NULL;
 	section_listnode* section_list = (section_listnode*)malloc(sizeof(section_list));
@@ -229,13 +229,3 @@ static DEEPModule* deep_load(char** p, int size) {
 	return module;
 }
 
-
-int main() {
-	const char* path = "program.wasm";
-	char*       p    = (char*)malloc(1024);
-	int         file;
-	int         size;
-	file = open(path, O_RDONLY);
-	size = (int)read(file, p, 1024);
-	DEEPModule* module = deep_load(&p, size);
-}

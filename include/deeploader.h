@@ -79,4 +79,6 @@ typedef struct section_listnode
     struct section_listnode *next;
 } section_listnode;
 
+DEEPModule* deep_load(char** p, int size);
+int read_leb_u32(char** p);
 #endif

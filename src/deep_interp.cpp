@@ -1,13 +1,16 @@
 //
 // Created by xj on 2021/3/30.
 //
-
-#include "interp.h"
-#include <math.c>
-#include "loader.cpp"
-#include "opcode.h"
+#include <math.h>
 #include <stdio.h>
 #include <math.h>
+#include <sys/stat.h>
+#include <fcntl.h>
+#include <unistd.h>
+#include "deeploader.h"
+#include "interp.h"
+#include "opcode.h"
+
 using namespace std;
 
 
@@ -35,7 +38,7 @@ void exec_instructions(DEEPExecEnv* env){
             case i32_eqz:{
                 ip++;
                 uint32_t a = popU32();
-                popU32(a==0?1:0);
+                pushU32(a==0?1:0);
                 break;
             }
             case i32_add:{
@@ -171,11 +174,7 @@ void exec_instructions(DEEPExecEnv* env){
                 pushF32(copysign(a,b));
                 break;
             }
-            case i32_eqz:{
-                ip++;
-                uint32_t a = popU32();
-                pushU32(a==0?1:0);
-            }
+            default:break;
         }
         //检查操作数栈是否溢出
         if(sp > env->sp_end){
@@ -211,6 +210,13 @@ int call_main(DEEPExecEnv* current_env, DEEPModule* module){
 }
 
 int main() {
+    const char* path = "program.wasm";
+	char*       p    = (char*)malloc(1024);
+	int         file;
+	int         size;
+	file = open(path, O_RDONLY);
+	size = (int)read(file, p, 1024);
+	DEEPModule* module = deep_load(&p, size);
     //创建操作数栈
     DEEPStack stack = stack_cons();
 
@@ -219,12 +225,7 @@ int main() {
     DEEPExecEnv* current_env=&deep_env;
     current_env->sp_end=stack.sp_end;
     current_env->sp=stack.sp;
-
-    //创建module，简单加减乘除只用到一个module
-    DEEPModule* module = loader();//从loader中获取
-
     int ans = call_main(current_env,module);
-
     printf("%d",ans);
 
 }
