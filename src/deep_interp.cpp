@@ -7,11 +7,9 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <unistd.h>
-#include "deeploader.h"
-#include "interp.h"
-#include "opcode.h"
-
-using namespace std;
+#include "deep_interp.h"
+#include "deep_loader.h"
+#include "deep_opcode.h"
 
 
 #define popS32() (int32_t)*(--sp)
@@ -20,6 +18,18 @@ using namespace std;
 #define pushS32(x)  *(sp) = (int32_t)(x);sp++
 #define pushF32(x) *(sp) = (float)(x);sp++ 
 #define pushU32(x) *(sp) = (uint32_t)(x);sp++ 
+
+#define STACK_CAP 100
+
+//创建操作数栈
+DEEPStack* stack_cons(void)
+{
+    DEEPStack *stack = (DEEPStack *) malloc(sizeof(DEEPStack));
+    stack->capacity = STACK_CAP;
+    stack->sp= (int*) malloc(sizeof(int) * STACK_CAP);
+    stack->sp_end = stack->sp + stack->capacity;
+    return stack;
+}
 
 //执行代码块指令
 void exec_instructions(DEEPExecEnv* env){
@@ -187,7 +197,8 @@ void exec_instructions(DEEPExecEnv* env){
 }
 
 //为main函数创建帧，执行main函数
-int call_main(DEEPExecEnv* current_env, DEEPModule* module){
+int call_main(DEEPExecEnv* current_env, DEEPModule* module)
+{
 
     //为main函数创建DEEPFunction
     DEEPFunction* main_func = module->func_section[4];//module.start_index记录了main函数索引
@@ -207,25 +218,4 @@ int call_main(DEEPExecEnv* current_env, DEEPModule* module){
 
     //返回栈顶元素
     return  *(current_env->sp-1);
-}
-
-int main() {
-    const char* path = "program.wasm";
-	char*       p    = (char*)malloc(1024);
-	int         file;
-	int         size;
-	file = open(path, O_RDONLY);
-	size = (int)read(file, p, 1024);
-	DEEPModule* module = deep_load(&p, size);
-    //创建操作数栈
-    DEEPStack stack = stack_cons();
-
-    //先声明环境并初始化
-    DEEPExecEnv deep_env;
-    DEEPExecEnv* current_env=&deep_env;
-    current_env->sp_end=stack.sp_end;
-    current_env->sp=stack.sp;
-    int ans = call_main(current_env,module);
-    printf("%d",ans);
-
 }

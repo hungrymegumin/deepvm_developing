@@ -4,8 +4,8 @@
  * Date:4/10/2021
  */
 
-#ifndef _DEEPLOADER_H
-#define _DEEPLOADER_H
+#ifndef _DEEP_LOADER_H
+#define _DEEP_LOADER_H
 
 //
 #define MAGIC_NUMBER 0x6d736100
@@ -56,7 +56,7 @@ typedef struct DEEPExport
     char* name;
     int index;
     char tag;
-};
+} DEEPExport;
 
 /* Data structure of module, at present we only support 
 two sections, which can make the program run*/
@@ -81,4 +81,4 @@ typedef struct section_listnode
 
 DEEPModule* deep_load(char** p, int size);
 int read_leb_u32(char** p);
-#endif
+#endif /* _DEEP_LOADER_H */
