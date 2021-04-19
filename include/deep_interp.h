@@ -7,7 +7,7 @@
 #include "deep_loader.h"
 
 //帧
-struct DEEPInterpFrame {  //DEEP帧
+typedef struct DEEPInterpFrame {  //DEEP帧
     struct DEEPInterpFrame *prev_frame;//指向前一个帧
     struct DEEPFunction *function;//当前函数实例
     int *sp;  //操作数栈指针
