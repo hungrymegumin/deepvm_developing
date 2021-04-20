@@ -1,14 +1,13 @@
 //
 // Created by xj on 2021/3/30.
 //
-
-#include "interp.h"
-#include <math.c>
-#include "loader.cpp"
-#include "opcode.h"
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
 #include <math.h>
-using namespace std;
+#include "deep_interp.h"
+#include "deep_loader.h"
+#include "deep_opcode.h"
 
 
 #define popS32() (int32_t)*(--sp)
@@ -18,15 +17,27 @@ using namespace std;
 #define pushF32(x) *(sp) = (float)(x);sp++ 
 #define pushU32(x) *(sp) = (uint32_t)(x);sp++ 
 
+#define STACK_CAPACITY 100
+
+//创建操作数栈
+DEEPStack* stack_cons(void)
+{
+    DEEPStack *stack = (DEEPStack *) malloc(sizeof(DEEPStack));
+    stack->capacity = STACK_CAPACITY;
+    stack->sp= (uint32_t*) malloc(sizeof(uint32_t) * STACK_CAPACITY);
+    stack->sp_end = stack->sp + stack->capacity;
+    return stack;
+}
+
 //执行代码块指令
 void exec_instructions(DEEPExecEnv* env){
-    int* sp = env->cur_frame->sp;
-    char* ip = env->cur_frame->function->code_begin;
-    char* ip_end = ip + env->cur_frame->function->code_size - 1;
+    uint32_t* sp = env->cur_frame->sp;
+    uint8_t* ip = env->cur_frame->function->code_begin;
+    uint8_t* ip_end = ip + env->cur_frame->function->code_size - 1;
     while(ip < ip_end){
         //提取指令码
         //立即数存在的话，提取指令码时提取立即数
-        int opcode = (int)*ip;
+        uint32_t opcode = (uint32_t)*ip;
         switch(opcode){
             case op_end:{
                 ip++;
@@ -35,7 +46,7 @@ void exec_instructions(DEEPExecEnv* env){
             case i32_eqz:{
                 ip++;
                 uint32_t a = popU32();
-                popU32(a==0?1:0);
+                pushU32(a==0?1:0);
                 break;
             }
             case i32_add:{
@@ -171,11 +182,7 @@ void exec_instructions(DEEPExecEnv* env){
                 pushF32(copysign(a,b));
                 break;
             }
-            case i32_eqz:{
-                ip++;
-                uint32_t a = popU32();
-                pushU32(a==0?1:0);
-            }
+            default:break;
         }
         //检查操作数栈是否溢出
         if(sp > env->sp_end){
@@ -188,7 +195,8 @@ void exec_instructions(DEEPExecEnv* env){
 }
 
 //为main函数创建帧，执行main函数
-int call_main(DEEPExecEnv* current_env, DEEPModule* module){
+int32_t call_main(DEEPExecEnv* current_env, DEEPModule* module)
+{
 
     //为main函数创建DEEPFunction
     DEEPFunction* main_func = module->func_section[4];//module.start_index记录了main函数索引
@@ -208,23 +216,4 @@ int call_main(DEEPExecEnv* current_env, DEEPModule* module){
 
     //返回栈顶元素
     return  *(current_env->sp-1);
-}
-
-int main() {
-    //创建操作数栈
-    DEEPStack stack = stack_cons();
-
-    //先声明环境并初始化
-    DEEPExecEnv deep_env;
-    DEEPExecEnv* current_env=&deep_env;
-    current_env->sp_end=stack.sp_end;
-    current_env->sp=stack.sp;
-
-    //创建module，简单加减乘除只用到一个module
-    DEEPModule* module = loader();//从loader中获取
-
-    int ans = call_main(current_env,module);
-
-    printf("%d",ans);
-
 }
