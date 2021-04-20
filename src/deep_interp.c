@@ -1,12 +1,10 @@
 //
 // Created by xj on 2021/3/30.
 //
-#include <math.h>
 #include <stdio.h>
+#include <stdlib.h>
+#include <stdint.h>
 #include <math.h>
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
 #include "deep_interp.h"
 #include "deep_loader.h"
 #include "deep_opcode.h"
@@ -19,27 +17,27 @@
 #define pushF32(x) *(sp) = (float)(x);sp++ 
 #define pushU32(x) *(sp) = (uint32_t)(x);sp++ 
 
-#define STACK_CAP 100
+#define STACK_CAPACITY 100
 
 //创建操作数栈
 DEEPStack* stack_cons(void)
 {
     DEEPStack *stack = (DEEPStack *) malloc(sizeof(DEEPStack));
-    stack->capacity = STACK_CAP;
-    stack->sp= (int*) malloc(sizeof(int) * STACK_CAP);
+    stack->capacity = STACK_CAPACITY;
+    stack->sp= (uint32_t*) malloc(sizeof(uint32_t) * STACK_CAPACITY);
     stack->sp_end = stack->sp + stack->capacity;
     return stack;
 }
 
 //执行代码块指令
 void exec_instructions(DEEPExecEnv* env){
-    int* sp = env->cur_frame->sp;
-    char* ip = env->cur_frame->function->code_begin;
-    char* ip_end = ip + env->cur_frame->function->code_size - 1;
+    uint32_t* sp = env->cur_frame->sp;
+    uint8_t* ip = env->cur_frame->function->code_begin;
+    uint8_t* ip_end = ip + env->cur_frame->function->code_size - 1;
     while(ip < ip_end){
         //提取指令码
         //立即数存在的话，提取指令码时提取立即数
-        int opcode = (int)*ip;
+        uint32_t opcode = (uint32_t)*ip;
         switch(opcode){
             case op_end:{
                 ip++;
@@ -197,7 +195,7 @@ void exec_instructions(DEEPExecEnv* env){
 }
 
 //为main函数创建帧，执行main函数
-int call_main(DEEPExecEnv* current_env, DEEPModule* module)
+int32_t call_main(DEEPExecEnv* current_env, DEEPModule* module)
 {
 
     //为main函数创建DEEPFunction
