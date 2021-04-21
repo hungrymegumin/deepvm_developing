@@ -85,6 +85,7 @@ void exec_instructions(DEEPExecEnv* env){
                 break;
             }
             case i32_const:{
+                ip++;
                 uint32_t temp = read_leb_u32(&ip);
                 pushU32(temp);
                 ip++;
