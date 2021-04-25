@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <stdint.h>
 #include <math.h>
+#include <string.h>
 #include "deep_interp.h"
 #include "deep_loader.h"
 #include "deep_opcode.h"
@@ -14,8 +15,8 @@
 #define popF32() (float)*(--sp)
 #define popU32() (uint32_t)*(--sp)
 #define pushS32(x)  *(sp) = (int32_t)(x);sp++
-#define pushF32(x) *(sp) = (float)(x);sp++ 
-#define pushU32(x) *(sp) = (uint32_t)(x);sp++ 
+#define pushF32(x) *(sp) = (float)(x);sp++
+#define pushU32(x) *(sp) = (uint32_t)(x);sp++
 
 #define STACK_CAPACITY 100
 
@@ -23,6 +24,10 @@
 DEEPStack* stack_cons(void)
 {
     DEEPStack *stack = (DEEPStack *) malloc(sizeof(DEEPStack));
+    if(stack == NULL){
+        printf("Operand stack creation failed\r\n");
+        return NULL;
+    }
     stack->capacity = STACK_CAPACITY;
     stack->sp= (uint32_t*) malloc(sizeof(uint32_t) * STACK_CAPACITY);
     stack->sp_end = stack->sp + stack->capacity;
@@ -68,14 +73,14 @@ void exec_instructions(DEEPExecEnv* env){
                 uint32_t a = popU32();
                 uint32_t b = popU32();
                 pushU32(a*b);
-                break; 
+                break;
             }
             case i32_divs:{
                 ip++;
                 int32_t a = popS32();
                 int32_t b = popS32();
                 pushS32(a/b);
-                break; 
+                break;
             }
             case i32_divu:{
                 ip++;
@@ -174,7 +179,7 @@ void exec_instructions(DEEPExecEnv* env){
                 float a = popF32();
                 float b = popF32();
                 pushF32(a>b?a:b);
-                break; 
+                break;
             }
             case f32_copysign:{
                 ip++;
@@ -187,8 +192,8 @@ void exec_instructions(DEEPExecEnv* env){
         }
         //检查操作数栈是否溢出
         if(sp > env->sp_end){
-            printf("%s","warning! Operand stack overflow!");
-            break;
+            printf("warning! Operand stack overflow!\r\n");
+            return;
         }
     }
     //更新env
@@ -199,8 +204,22 @@ void exec_instructions(DEEPExecEnv* env){
 int32_t call_main(DEEPExecEnv* current_env, DEEPModule* module)
 {
 
+    //create DEEPFunction for main
+    //find the index of main
+    int main_index = -1;
+    int export_count = module->export_count;
+    for (int i=0;i<export_count;i++){
+        if(strcmp((module->export_section[i])->name,"main")==0){
+            main_index = module->export_section[i]->index;
+        }
+    }
+    if(main_index < 0){
+        printf("the main function index failed!\r\n");
+        return -1;
+    }
+
     //为main函数创建DEEPFunction
-    DEEPFunction* main_func = module->func_section[4];//module.start_index记录了main函数索引
+    DEEPFunction* main_func = module->func_section[main_index];//module.start_index记录了main函数索引
 
     //为main函数创建帧
     struct DEEPInterpFrame frame;
