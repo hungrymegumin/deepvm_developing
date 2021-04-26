@@ -10,7 +10,6 @@
 #include "deep_loader.h"
 #include "deep_opcode.h"
 
-
 #define popS32() (int32_t)*(--sp)
 #define popF32() (float)*(--sp)
 #define popU32() (uint32_t)*(--sp)
@@ -25,20 +24,23 @@ DEEPStack* stack_cons(void)
 {
     DEEPStack *stack = (DEEPStack *) malloc(sizeof(DEEPStack));
     if(stack == NULL){
-        printf("Operand stack creation failed\r\n");
+        printf("Operand stack creation failed!\r\n");
         return NULL;
     }
     stack->capacity = STACK_CAPACITY;
     stack->sp= (uint32_t*) malloc(sizeof(uint32_t) * STACK_CAPACITY);
+    if(stack->sp == NULL){
+        printf("Malloc area for stack error!\r\n");
+    }
     stack->sp_end = stack->sp + stack->capacity;
     return stack;
 }
 
 //执行代码块指令
-void exec_instructions(DEEPExecEnv* env){
-    uint32_t* sp = env->cur_frame->sp;
-    uint8_t* ip = env->cur_frame->function->code_begin;
-    uint8_t* ip_end = ip + env->cur_frame->function->code_size - 1;
+void exec_instructions(DEEPExecEnv* current_env, DEEPModule* module){
+    uint32_t* sp = current_env->cur_frame->sp;
+    uint8_t* ip = current_env->cur_frame->function->code_begin;
+    uint8_t* ip_end = ip + current_env->cur_frame->function->code_size - 1;
     while(ip < ip_end){
         //提取指令码
         //立即数存在的话，提取指令码时提取立即数
@@ -46,6 +48,22 @@ void exec_instructions(DEEPExecEnv* env){
         switch(opcode){
             case op_end:{
                 ip++;
+                break;
+            }
+            case op_call:{
+                ip++;
+                uint32_t func_index = read_leb_u32(&ip);//被调用函数index
+                //需要一个同步操作
+                current_env->sp = sp;
+                call_function(current_env, module, func_index);
+                sp = current_env->sp;
+                break;
+            }
+            case op_local_get:{
+                ip++;
+                uint32_t index = read_leb_u32(&ip);//local_get指令的立即数
+                uint32_t a = current_env->vars[index];
+                pushU32(current_env->vars[index]);
                 break;
             }
             case i32_eqz:{
@@ -93,7 +111,6 @@ void exec_instructions(DEEPExecEnv* env){
                 ip++;
                 uint32_t temp = read_leb_u32(&ip);
                 pushU32(temp);
-                ip++;
                 break;
             }
             case i32_rems:{
@@ -191,13 +208,55 @@ void exec_instructions(DEEPExecEnv* env){
             default:break;
         }
         //检查操作数栈是否溢出
-        if(sp > env->sp_end){
+        if(sp > current_env->sp_end){
             printf("warning! Operand stack overflow!\r\n");
             return;
         }
     }
     //更新env
-    env->sp=sp;
+    current_env->sp=sp;
+}
+
+//调用普通函数
+void call_function(DEEPExecEnv* current_env, DEEPModule* module, int func_index){
+
+    //为func函数创建DEEPFunction
+    DEEPFunction* func = module->func_section[func_index];
+
+    //函数类型
+    DEEPType* deepType = func->func_type;
+    int param_num = deepType->param_count;
+    int ret_num = deepType->ret_count;
+
+//    current_env->sp-=param_num;//操作数栈指针下移
+    current_env->vars = (uint32_t)malloc(sizeof(uint32_t) * param_num);
+    int vars_temp = param_num;
+    while(vars_temp > 0){
+        int temp = *(--current_env->sp);
+        current_env->vars[(vars_temp--) - 1] = temp;
+    }
+
+    //局部变量组
+    LocalVars** locals = func->localvars;
+
+    //为func函数创建帧
+    struct DEEPInterpFrame frame;
+    //初始化
+    frame.sp = current_env->sp;
+    frame.function = func;
+    frame.prev_frame = current_env->cur_frame;
+
+    //更新env中内容
+    current_env->cur_frame = &frame;
+
+    //执行frame中函数
+    //sp要下移，栈顶元素即为函数参数
+    exec_instructions(current_env,module);
+
+    //执行完毕退栈
+    current_env->cur_frame = frame.prev_frame;
+//    free(&frame);
+    return;
 }
 
 //为main函数创建帧，执行main函数
@@ -232,7 +291,7 @@ int32_t call_main(DEEPExecEnv* current_env, DEEPModule* module)
 
     //执行frame中函数
     //sp要下移，栈顶元素即为函数参数
-    exec_instructions(current_env);
+    exec_instructions(current_env,module);
 
     //返回栈顶元素
     return  *(current_env->sp-1);
