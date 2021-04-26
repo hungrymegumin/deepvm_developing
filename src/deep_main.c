@@ -45,7 +45,10 @@ int32_t main(int argv, char ** args) {
     current_env->sp_end = stack->sp_end;
     current_env->sp = stack->sp;
     int32_t ans = call_main(current_env,module);
-    printf("%d",ans);
+
+    printf("%d\n",ans);
+    fflush(stdout);
+
     /* release memory */
     fclose(fp);
     free(module);
