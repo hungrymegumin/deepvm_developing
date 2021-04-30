@@ -88,7 +88,6 @@ void exec_instructions(DEEPExecEnv* env){
                 ip++;
                 uint32_t temp = read_leb_u32(&ip);
                 pushU32(temp);
-                ip++;
                 break;
             }
             case i32_rems:{
