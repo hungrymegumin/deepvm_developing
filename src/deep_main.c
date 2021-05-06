@@ -50,6 +50,7 @@ int32_t main(int argv, char ** args) {
 
     /* release memory */
     fclose(fp);
+    free(stack);
     free(module);
     free(q);
     p = NULL;

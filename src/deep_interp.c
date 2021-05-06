@@ -66,6 +66,26 @@ void exec_instructions(DEEPExecEnv* current_env, DEEPModule* module){
                 pushU32(current_env->vars[index]);
                 break;
             }
+            case op_local_set:{
+                break;
+            }
+            //内存指令:load,store
+            case i32_load:{
+                ip+=2;
+                uint32_t offset = read_leb_u32(&ip);
+
+                break;
+            }
+            case i32_store:{
+                ip+=2;
+                uint32_t offset = read_leb_u32(&ip);
+                uint32_t temp1 = *(--sp);
+                uint32_t temp2 = *(--sp);//temp2+offset为实际地址
+
+                break;
+            }
+
+            //算术指令
             case i32_eqz:{
                 ip++;
                 uint32_t a = popU32();
@@ -240,22 +260,26 @@ void call_function(DEEPExecEnv* current_env, DEEPModule* module, int func_index)
     LocalVars** locals = func->localvars;
 
     //为func函数创建帧
-    struct DEEPInterpFrame frame;
+    DEEPInterpFrame *frame = (DEEPInterpFrame*)malloc(sizeof(DEEPInterpFrame));
+    if(frame == NULL){
+        printf("Malloc area for normal_frame error!\r\n");
+    }
     //初始化
-    frame.sp = current_env->sp;
-    frame.function = func;
-    frame.prev_frame = current_env->cur_frame;
+    frame->sp = current_env->sp;
+    frame->function = func;
+    frame->prev_frame = current_env->cur_frame;
 
     //更新env中内容
-    current_env->cur_frame = &frame;
+    current_env->cur_frame = frame;
 
     //执行frame中函数
     //sp要下移，栈顶元素即为函数参数
     exec_instructions(current_env,module);
 
     //执行完毕退栈
-    current_env->cur_frame = frame.prev_frame;
-//    free(&frame);
+    current_env->cur_frame = frame->prev_frame;
+    free(current_env->vars);
+    free(frame);
     return;
 }
 
@@ -281,17 +305,21 @@ int32_t call_main(DEEPExecEnv* current_env, DEEPModule* module)
     DEEPFunction* main_func = module->func_section[main_index];//module.start_index记录了main函数索引
 
     //为main函数创建帧
-    struct DEEPInterpFrame frame;
+    DEEPInterpFrame *main_frame = (DEEPInterpFrame*)malloc(sizeof(struct DEEPInterpFrame));
+    if(main_frame == NULL){
+        printf("Malloc area for main_frame error!\r\n");
+    }
     //初始化
-    frame.sp = current_env->sp;
-    frame.function = main_func;
+    main_frame->sp = current_env->sp;
+    main_frame->function = main_func;
 
     //更新env中内容
-    current_env->cur_frame = &frame;
+    current_env->cur_frame = main_frame;
 
     //执行frame中函数
     //sp要下移，栈顶元素即为函数参数
     exec_instructions(current_env,module);
+    free(main_frame);
 
     //返回栈顶元素
     return  *(current_env->sp-1);

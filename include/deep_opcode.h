@@ -6,7 +6,15 @@
 enum DEEPOpcode {
     op_end = 0x0b,
     op_call = 0x10,
+    //变量指令
     op_local_get = 0x20,
+    op_local_set = 0x21,
+    op_local_tee = 0x22,
+    op_global_get = 0x23,
+    op_global_set = 0x24,
+    //内存指令
+    i32_load = 0x28,
+    i32_store = 0x36,
     //常数指令
     i32_const = 0x41,
     f32_const = 0x42,
