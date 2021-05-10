@@ -50,9 +50,9 @@ enum DEEPOpcode {
     i32_popcnt = 0x69,
     f32_abs = 0x8b,
     f32_neg = 0x8c,
-    f32_ceil= 0x8d,
-    f32_floor= 0x8e,
-    f32_trunc= 0x8f,
+    f32_ceil = 0x8d,
+    f32_floor = 0x8e,
+    f32_trunc = 0x8f,
     f32_nearest = 0x90,
     f32_sqrt = 0x91,
     //比较指令
