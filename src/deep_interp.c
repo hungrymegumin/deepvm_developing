@@ -56,7 +56,7 @@ void exec_instructions(DEEPExecEnv *current_env, DEEPModule *module) {
             }
             case op_call: {
                 ip++;
-                uint32_t func_index = READ_BYTE(ip);//被调用函数index
+                uint32_t func_index = read_leb_u32(&ip);//被调用函数index
                 //需要一个同步操作
                 current_env->sp = sp;
                 call_function(current_env, module, func_index);
@@ -65,34 +65,34 @@ void exec_instructions(DEEPExecEnv *current_env, DEEPModule *module) {
             }
             case op_local_get: {
                 ip++;
-                uint32_t index = READ_BYTE(ip);//local_get指令的立即数
+                uint32_t index = read_leb_u32(&ip);//local_get指令的立即数
                 uint32_t a = current_env->local_vars[index];
-                pushU32(current_env->local_vars[index]);
+                pushU32(a);
                 break;
             }
             case op_local_set: {
                 ip++;
-                uint32_t index = READ_BYTE(ip);//local_set指令的立即数
+                uint32_t index = read_leb_u32(&ip);//local_set指令的立即数
                 current_env->local_vars[index] = popU32();
                 break;
             }
             case op_local_tee: {
                 ip++;
-                uint32_t index = READ_BYTE(ip);//local_tee指令的立即数
+                uint32_t index = read_leb_u32(&ip);//local_tee指令的立即数
                 uint32_t num = *(sp - 1);
                 current_env->local_vars[index] = num;
                 break;
             }
             case op_global_get: {
                 ip++;
-                uint32_t index = READ_BYTE(ip);//global_get指令的立即数
+                uint32_t index = read_leb_u32(&ip);//global_get指令的立即数
                 uint32_t a = current_env->global_vars[index];
-                pushU32(current_env->global_vars[index]);
+                pushU32(a);
                 break;
             }
             case op_global_set: {
                 ip++;
-                uint32_t index = READ_BYTE(ip);//global_set指令的立即数
+                uint32_t index = read_leb_u32(&ip);//global_set指令的立即数
                 current_env->global_vars[index] = popU32();
                 break;
             }
@@ -100,7 +100,7 @@ void exec_instructions(DEEPExecEnv *current_env, DEEPModule *module) {
                 //内存指令:load,store
             case i32_load: {
                 ip += 2;
-                uint32_t offset = READ_BYTE(ip);
+                uint32_t offset = read_leb_u32(&ip);
                 uint32_t temp1 = popU32();
 //                pushU32(data_list[temp1+offset]);
 
@@ -108,7 +108,7 @@ void exec_instructions(DEEPExecEnv *current_env, DEEPModule *module) {
             }
             case i32_store: {
                 ip += 2;
-                uint32_t offset = READ_BYTE(ip);
+                uint32_t offset = read_leb_u32(&ip);
                 uint32_t temp1 = popU32();
                 uint32_t temp2 = popU32();//temp2+offset为实际地址
 //                data_list[temp2+offset] = temp1;
@@ -160,7 +160,7 @@ void exec_instructions(DEEPExecEnv *current_env, DEEPModule *module) {
             }
             case i32_const: {
                 ip++;
-                uint32_t temp = READ_BYTE(ip);
+                uint32_t temp = read_leb_u32(&ip);
                 pushU32(temp);
                 break;
             }

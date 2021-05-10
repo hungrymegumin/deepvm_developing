@@ -10,19 +10,18 @@
 
 int32_t main(int argv, char **args) {
     char *path;
-//    if(argv==1){
-//        error("no file input!");
-//    }else{
-//        path = args[1];
-//    }
+    if(argv==1){
+        error("no file input!");
+    }else{
+        path = args[1];
+    }
     uint8_t *q = (uint8_t *) malloc(WASM_FILE_SIZE);
     uint8_t *p = q;
-//    if (p == NULL) {
-//        error("malloc fail.");
-//        return -1;
-//    }
+    if (p == NULL) {
+        error("malloc fail.");
+        return -1;
+    }
 
-    path = "/home/xj/deepvm_developing/example/test.wasm";
     FILE *fp = fopen(path, "rb"); /* read wasm file with binary mode */
     if (fp == NULL) {
         error("file open fail.");
@@ -45,6 +44,8 @@ int32_t main(int argv, char **args) {
     DEEPExecEnv *current_env = &deep_env;
     current_env->sp_end = stack->sp_end;
     current_env->sp = stack->sp;
+    current_env->global_vars = (uint32_t *) malloc(sizeof(uint32_t) * 100);
+
     int32_t ans = call_main(current_env, module);
 
     printf("%d\n", ans);
@@ -54,6 +55,7 @@ int32_t main(int argv, char **args) {
     fclose(fp);
     free(stack);
     free(module);
+    free(current_env->global_vars);
     free(q);
     p = NULL;
     return 0;
