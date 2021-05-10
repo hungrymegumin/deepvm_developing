@@ -9,18 +9,19 @@
 
 int32_t main(int argv, char ** args) {
     char* path;
-    if(argv==1){
-        error("no file input!");
-    }else{
-        path = args[1];
-    }
+//    if(argv==1){
+//        error("no file input!");
+//    }else{
+//        path = args[1];
+//    }
 	uint8_t* q = (uint8_t *) malloc(WASM_FILE_SIZE);
 	uint8_t* p = q;
-    if (p == NULL) {
-        error("malloc fail.");
-        return -1;
-    }
+//    if (p == NULL) {
+//        error("malloc fail.");
+//        return -1;
+//    }
 
+    path = "/home/xj/deepvm_developing/example/test.wasm";
     FILE *fp = fopen(path, "rb"); /* read wasm file with binary mode */
     if(fp == NULL) {
         error("file open fail.");

@@ -17,6 +17,11 @@
 #define pushF32(x) *(sp) = (float)(x);sp++
 #define pushU32(x) *(sp) = (uint32_t)(x);sp++
 
+#define READ_VALUE(Type, p) \
+	(p += sizeof(Type), *(Type*)(p - sizeof(Type)))
+#define READ_UINT32(p)  READ_VALUE(uint32_t, p)
+#define READ_BYTE(p) READ_VALUE(uint8_t, p)
+
 #define STACK_CAPACITY 100
 
 //创建操作数栈
@@ -52,7 +57,7 @@ void exec_instructions(DEEPExecEnv* current_env, DEEPModule* module){
             }
             case op_call:{
                 ip++;
-                uint32_t func_index = read_leb_u32(&ip);//被调用函数index
+                uint32_t func_index = READ_BYTE(ip);//被调用函数index
                 //需要一个同步操作
                 current_env->sp = sp;
                 call_function(current_env, module, func_index);
@@ -61,7 +66,7 @@ void exec_instructions(DEEPExecEnv* current_env, DEEPModule* module){
             }
             case op_local_get:{
                 ip++;
-                uint32_t index = read_leb_u32(&ip);//local_get指令的立即数
+                uint32_t index = READ_BYTE(ip);//local_get指令的立即数
                 uint32_t a = current_env->vars[index];
                 pushU32(current_env->vars[index]);
                 break;
@@ -72,13 +77,14 @@ void exec_instructions(DEEPExecEnv* current_env, DEEPModule* module){
             //内存指令:load,store
             case i32_load:{
                 ip+=2;
-                uint32_t offset = read_leb_u32(&ip);
+                uint32_t offset = READ_BYTE(ip);
+
 
                 break;
             }
             case i32_store:{
                 ip+=2;
-                uint32_t offset = read_leb_u32(&ip);
+                uint32_t offset = READ_BYTE(ip);
                 uint32_t temp1 = *(--sp);
                 uint32_t temp2 = *(--sp);//temp2+offset为实际地址
 
@@ -129,7 +135,7 @@ void exec_instructions(DEEPExecEnv* current_env, DEEPModule* module){
             }
             case i32_const:{
                 ip++;
-                uint32_t temp = read_leb_u32(&ip);
+                uint32_t temp = READ_BYTE(ip);
                 pushU32(temp);
                 break;
             }
@@ -249,7 +255,7 @@ void call_function(DEEPExecEnv* current_env, DEEPModule* module, int func_index)
     int ret_num = deepType->ret_count;
 
 //    current_env->sp-=param_num;//操作数栈指针下移
-    current_env->vars = (uint32_t)malloc(sizeof(uint32_t) * param_num);
+    current_env->vars = (uint32_t*)malloc(sizeof(uint32_t) * param_num);
     int vars_temp = param_num;
     while(vars_temp > 0){
         int temp = *(--current_env->sp);
