@@ -269,8 +269,6 @@ DEEPModule* deep_load(uint8_t** p, int size) {
 //内存模块实现
 #define PAGESIZE 65536
 
-uint32_t min_page = 1;
-
 uint8_t* init_memory(uint32_t min_page) {
     uint8_t* mem = (uint8_t*)malloc(min_page * PAGESIZE);
     memset(mem, 0, min_page * PAGESIZE);
