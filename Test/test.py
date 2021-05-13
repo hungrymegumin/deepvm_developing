@@ -8,8 +8,6 @@ def judge(item):
     p = subprocess.Popen(cmd.split(), shell=False, stdout=subprocess.PIPE, stderr=subprocess.STDOUT)
     p.wait(6)
     res=bytes.decode(p.stdout.read().strip())
-    if len(p.stdout):
-        return False
     print("---------------------------------")
     print(res)
     print("---------------------------------")
@@ -37,7 +35,7 @@ if __name__ == "__main__":
     testList = []
     with open('./Test/testList.txt','r') as f:
         for i in f.readlines():
-            testList.append(i)
+            testList.append(i.strip())
     if len(testList)==0:
         for root,dirs,file in os.walk("./Test",topdown=False):
             for name in dirs:
