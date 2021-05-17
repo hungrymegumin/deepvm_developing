@@ -10,12 +10,12 @@
 #include "deep_loader.h"
 #include "deep_opcode.h"
 
-#define popS32() (int32_t)*(--sp)
-#define popF32() (float)*(--sp)
-#define popU32() (uint32_t)*(--sp)
-#define pushS32(x)  *(sp) = (int32_t)(x);sp++
-#define pushF32(x) *(sp) = (float)(x);sp++
-#define pushU32(x) *(sp) = (uint32_t)(x);sp++
+#define popS32() *(--sp)
+#define popF32() *(--sp)
+#define popU32() *(--sp)
+#define pushS32(x)  *(sp) =(x);sp++
+#define pushF32(x) *(sp) =(x);sp++
+#define pushU32(x) *(sp) =(x);sp++
 
 #define READ_VALUE(Type, p) \
     (p += sizeof(Type), *(Type*)(p - sizeof(Type)))
@@ -162,7 +162,7 @@ void exec_instructions(DEEPExecEnv *current_env, DEEPModule *module) {
             }
             case i32_const: {
                 ip++;
-                uint32_t temp = read_leb_u32(&ip);
+                int32_t temp = read_leb_i32(&ip);
                 pushU32(temp);
                 break;
             }
