@@ -45,6 +45,7 @@ void exec_instructions(DEEPExecEnv *current_env, DEEPModule *module) {
     uint32_t *sp = current_env->cur_frame->sp;
     uint8_t *ip = current_env->cur_frame->function->code_begin;
     uint8_t *ip_end = ip + current_env->cur_frame->function->code_size - 1;
+    uint32_t *memory = current_env ->memory;
     while (ip < ip_end) {
         //提取指令码
         //立即数存在的话，提取指令码时提取立即数
@@ -62,6 +63,25 @@ void exec_instructions(DEEPExecEnv *current_env, DEEPModule *module) {
                 call_function(current_env, module, func_index);
                 sp = current_env->sp;
                 break;
+            }
+            //内存指令
+            case i32_load:{
+                ip++;
+                uint32_t base = popU32();
+                uint32_t align = read_leb_u32(&ip);
+                ip++;
+                uint32_t offset = read_leb_u32(&ip);
+                uint32_t number = read_mem32(memory+base,offset);
+                pushU32(number);
+            }
+            case i32_store:{
+                ip++;
+                uint32_t base = popU32();
+                uint32_t align = read_leb_u32(&ip);
+                ip++;
+                uint32_t offset = read_leb_u32(&ip);
+                uint32_t number = popU32();
+                write_mem32(memory+base,number,offset);
             }
             case op_local_get: {
                 ip++;
@@ -97,24 +117,6 @@ void exec_instructions(DEEPExecEnv *current_env, DEEPModule *module) {
                 break;
             }
 
-                //内存指令:load,store
-            case i32_load: {
-                ip += 2;
-                uint32_t offset = read_leb_u32(&ip);
-                uint32_t temp1 = popU32();
-//                pushU32(data_list[temp1+offset]);
-
-                break;
-            }
-            case i32_store: {
-                ip += 2;
-                uint32_t offset = read_leb_u32(&ip);
-                uint32_t temp1 = popU32();
-                uint32_t temp2 = popU32();//temp2+offset为实际地址
-//                data_list[temp2+offset] = temp1;
-
-                break;
-            }
 
                 //算术指令
             case i32_eqz: {
@@ -134,28 +136,28 @@ void exec_instructions(DEEPExecEnv *current_env, DEEPModule *module) {
                 ip++;
                 uint32_t a = popU32();
                 uint32_t b = popU32();
-                pushU32(a - b);
+                pushU32(b - a);
                 break;
             }
             case i32_mul: {
                 ip++;
                 uint32_t a = popU32();
                 uint32_t b = popU32();
-                pushU32(a * b);
+                pushU32(b * a);
                 break;
             }
             case i32_divs: {
                 ip++;
                 int32_t a = popS32();
                 int32_t b = popS32();
-                pushS32(a / b);
+                pushS32(b / a);
                 break;
             }
             case i32_divu: {
                 ip++;
                 uint32_t a = popU32();
                 uint32_t b = popU32();
-                pushU32(a / b);
+                pushU32(b / a);
                 break;
             }
             case i32_const: {
@@ -168,35 +170,35 @@ void exec_instructions(DEEPExecEnv *current_env, DEEPModule *module) {
                 ip++;
                 int32_t a = popS32();
                 int32_t b = popS32();
-                pushS32(a % b);
+                pushS32(b % a);
                 break;
             }
             case i32_and: {
                 ip++;
                 uint32_t a = popU32();
                 uint32_t b = popU32();
-                pushU32(a & b);
+                pushU32(b & a);
                 break;
             }
             case i32_or: {
                 ip++;
                 uint32_t a = popU32();
                 uint32_t b = popU32();
-                pushU32(a | b);
+                pushU32(b | a);
                 break;
             }
             case i32_xor: {
                 ip++;
                 uint32_t a = popU32();
                 uint32_t b = popU32();
-                pushU32(a ^ b);
+                pushU32(b ^ a);
                 break;
             }
             case i32_shl: {
                 ip++;
                 uint32_t a = popU32();
                 uint32_t b = popU32();
-                pushU32(a << (b % 32));
+                pushU32(b << (a % 32));
                 break;
             }
             case i32_shrs:
@@ -204,56 +206,56 @@ void exec_instructions(DEEPExecEnv *current_env, DEEPModule *module) {
                 ip++;
                 uint32_t a = popU32();
                 uint32_t b = popU32();
-                pushU32(a >> (b % 32));
+                pushU32(b >> (a % 32));
                 break;
             }
             case f32_add: {
                 ip++;
                 float a = popF32();
                 float b = popF32();
-                pushF32(a + b);
+                pushF32(b + a);
                 break;
             }
             case f32_sub: {
                 ip++;
                 float a = popF32();
                 float b = popF32();
-                pushF32(a - b);
+                pushF32(b - a);
                 break;
             }
             case f32_mul: {
                 ip++;
                 float a = popF32();
                 float b = popF32();
-                pushF32(a * b);
+                pushF32(b * a);
                 break;
             }
             case f32_div: {
                 ip++;
                 float a = popF32();
                 float b = popF32();
-                pushF32(a / b);
+                pushF32(b / a);
                 break;
             }
             case f32_min: {
                 ip++;
                 float a = popF32();
                 float b = popF32();
-                pushF32(a < b ? a : b);
+                pushF32(b < a ? b : a);
                 break;
             }
             case f32_max: {
                 ip++;
                 float a = popF32();
                 float b = popF32();
-                pushF32(a > b ? a : b);
+                pushF32(b > a ? b : a);
                 break;
             }
             case f32_copysign: {
                 ip++;
                 float a = popF32();
                 float b = popF32();
-                pushF32(copysign(a, b));
+                pushF32(copysign(b, a));
                 break;
             }
             default:
