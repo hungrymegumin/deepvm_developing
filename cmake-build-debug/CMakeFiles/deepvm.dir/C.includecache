@@ -25,6 +25,8 @@ math.h
 -
 string.h
 -
+stdbool.h
+-
 deep_interp.h
 /mnt/d/githubProjects/deepvm_developing/src/deep_interp.h
 deep_loader.h
