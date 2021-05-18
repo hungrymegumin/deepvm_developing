@@ -227,9 +227,9 @@ void exec_instructions(DEEPExecEnv *current_env, DEEPModule *module) {
             }
             case i32_add: {
                 ip++;
-                uint32_t a = popU32();
-                uint32_t b = popU32();
-                pushU32(a + b);
+                int32_t a = popU32();
+                int32_t b = popU32();
+                pushS32(a + b);
                 break;
             }
             case i32_sub: {
@@ -263,7 +263,12 @@ void exec_instructions(DEEPExecEnv *current_env, DEEPModule *module) {
             case i32_const: {
                 ip++;
                 int32_t temp = read_leb_i32(&ip);
-                pushS32(temp);
+//                pushS32(temp);
+                AnyData* data = (AnyData*)malloc(sizeof(AnyData));
+                data->m_datatype = 1;
+                data->value.m_intval = temp;
+                *sp = (data);
+                sp++;
                 break;
             }
             case f32_const: {
