@@ -17,7 +17,7 @@ enum DEEPOpcode {
     i32_store = 0x36,
     //常数指令
     i32_const = 0x41,
-    f32_const = 0x42,
+    f32_const = 0x43,
     //测试指令
     i32_eqz = 0x54,
     //二元整数算数指令
@@ -66,6 +66,9 @@ enum DEEPOpcode {
     i32_leu = 0x4d,
     i32_ges = 0x4e,
     i32_geu = 0x4f,
+
+    //截断指令
+    op_i32_turnc_s_f32   = 0xa8, /* i32_2_f32 */
 };
 
 #endif /* _DEEP_OPCODE_H */
