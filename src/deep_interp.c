@@ -6,6 +6,7 @@
 #include <stdint.h>
 #include <math.h>
 #include <string.h>
+#include <stdbool.h>
 #include "deep_interp.h"
 #include "deep_loader.h"
 #include "deep_opcode.h"
@@ -15,8 +16,7 @@
 #define popU32() (*(--sp))->value.m_intval;
 
 #define pushS32(x) do { \
-struct AnyData new_data;\
-AnyData* data = &new_data; \
+AnyData* data = (AnyData*)malloc(sizeof(AnyData)); \
 data->m_datatype = 1; \
 data->value.m_intval = x;\
 *sp = (data);          \
@@ -24,8 +24,7 @@ sp++;   \
 } while(0)
 
 #define pushF32(x) do { \
-struct AnyData new_data;\
-AnyData* data = &new_data;\
+AnyData* data = (AnyData*)malloc(sizeof(AnyData)); \
 data->m_datatype = 2; \
 data->value.m_floatval = x; \
 *sp =(data);\
@@ -33,8 +32,7 @@ sp++;                   \
 } while(0)
 
 #define pushU32(x) do { \
-struct AnyData new_data;\
-AnyData* data = &new_data;\
+AnyData* data = (AnyData*)malloc(sizeof(AnyData)); \
 data->m_datatype = 0; \
 data->value.m_uintval = x;\
 *sp = (data);          \
@@ -87,44 +85,90 @@ double mypow(double num, double n) {
 }
 
 
-float convertBinaryFloat(float t) {
-    char binaryNum[100];
-    sprintf(binaryNum, "%f", t);//uint转化为char[]
+//float convertBinaryFloat(float t) {
+//    char binaryNum[100];
+//    sprintf(binaryNum, "%f", t);//uint转化为char[]
+//
+//    char *p = binaryNum;
+//    double decimalNum = 0;
+//    int n = 0, dotsNum = 0, i = 0, j = 0;
+//
+//    for (; *p != '\0'; p++, n++) {
+//        if (!(*p == '0' || *p == '1' || *p == '.')) {
+//            printf("bad input!\n");
+//            return 1;
+//        }
+//        if (*p == '.') {
+//            dotsNum++;
+//            if (dotsNum == 1)
+//                i = n;
+//            else {
+//                printf("bad binary number!\n");
+//                return 1;
+//            }
+//        }
+//    }
+//    if (dotsNum)
+//        j = n - 1 - i;
+//    else
+//        i = n;
+//    p = binaryNum;
+//    for (; i > 0; p++, i--)
+//        if (*p == '1')
+//            decimalNum += mypow(2, i - 1);
+//    for (p++, i = 1; i <= j; p++, i++)
+//        if (*p == '1')
+//            decimalNum += mypow(2, -i);
+//
+//    return decimalNum;
+//}
+float binaryToDigital(double t) {
+    char binary[100];
+    sprintf(binary, "%.15f", t);
+    char ch;
+    int integer = 0;
+    float decimal = 0.0;
+    int i = 0, integerNum = 0, decimalNum = -1;
+    bool hasDecimal = false;
 
-    char *p = binaryNum;
-    double decimalNum = 0;
-    int n = 0, dotsNum = 0, i = 0, j = 0;
-
-    for (; *p != '\0'; p++, n++) {
-        if (!(*p == '0' || *p == '1' || *p == '.')) {
-            printf("bad input!\n");
-            return 1;
+    // 计算整数和小数所占位数
+    for (; i < 30; ++i) {
+        ch = binary[i];
+        if (ch == 0) {
+            break;
         }
-        if (*p == '.') {
-            dotsNum++;
-            if (dotsNum == 1)
-                i = n;
-            else {
-                printf("bad binary number!\n");
-                return 1;
-            }
+        if (!hasDecimal && ch != '.') {
+            ++integerNum;
+        } else {
+            hasDecimal = true;
+            ++decimalNum;
         }
     }
-    if (dotsNum)
-        j = n - 1 - i;
-    else
-        i = n;
-    p = binaryNum;
-    for (; i > 0; p++, i--)
-        if (*p == '1')
-            decimalNum += mypow(2, i - 1);
-    for (p++, i = 1; i <= j; p++, i++)
-        if (*p == '1')
-            decimalNum += mypow(2, -i);
 
-    return decimalNum;
+    // 计算整数部分
+    i = integerNum;
+    for (; i > 0; --i) {
+        if (binary[i - 1] == '1') {
+            integer += mypow(2, integerNum - i);
+        }
+    }
+
+    // 计算小数部分
+    if (hasDecimal) {
+        i = integerNum + 1;
+        for (; i <= integerNum + decimalNum; ++i) {
+            if (binary[i] == '1') {
+                decimal += (float) mypow(2, integerNum - i);
+            }
+        }
+        return ((float) integer + decimal);
+    } else {
+        return (float) integer;
+    }
+
 }
 
+//十进制转二进制
 int convertBinary(int t) {
     int result = 0;//存储a的二进制结果。
     int p = 1;//p=1表示个位数
@@ -227,8 +271,8 @@ void exec_instructions(DEEPExecEnv *current_env, DEEPModule *module) {
             }
             case i32_add: {
                 ip++;
-                int32_t a = popU32();
-                int32_t b = popU32();
+                int32_t a = popS32();
+                int32_t b = popS32();
                 pushS32(a + b);
                 break;
             }
@@ -264,7 +308,7 @@ void exec_instructions(DEEPExecEnv *current_env, DEEPModule *module) {
                 ip++;
                 int32_t temp = read_leb_i32(&ip);
 //                pushS32(temp);
-                AnyData* data = (AnyData*)malloc(sizeof(AnyData));
+                AnyData *data = (AnyData *) malloc(sizeof(AnyData));
                 data->m_datatype = 1;
                 data->value.m_intval = temp;
                 *sp = (data);
@@ -278,13 +322,15 @@ void exec_instructions(DEEPExecEnv *current_env, DEEPModule *module) {
                 uint32_t temp3 = READ_BYTE(ip);
                 uint32_t temp4 = READ_BYTE(ip);
                 int tag = temp4 >> 7;//符号标记位
-                int index = (temp4 - (tag << 7)) << 1 + temp3 >> 7 - 127;//指数
-                float t = convertBinary(temp3 - (temp3 >> 7 << 7)) / 1.0 / 10000000;
-                float e = convertBinaryFloat(t);
+                int index = ((temp4 - (tag << 7)) << 1) + (temp3 >> 7) - 127;//指数
+                double t = convertBinary(temp3 - (temp3 >> 7 << 7)) / 1.0 / mypow(10, 7);
+                t += convertBinary(temp2)/1.0/mypow(10,15);
+                t += convertBinary(temp1)/1.0/mypow(10,23);
+                float e = binaryToDigital((t + 1) * mypow(10, index));
                 if (tag == 0) {
-                    pushF32((1 << index) + e);
+                    pushF32(e);
                 } else {
-                    pushF32(-((1 << index) + e));
+                    pushF32(-e);
                 }
                 break;
             }
