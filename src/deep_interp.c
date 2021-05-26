@@ -10,42 +10,15 @@
 #include "deep_loader.h"
 #include "deep_opcode.h"
 
-#define popS32() (int32_t)*(--sp)
-#define popF32() (float)*(--sp)
-#define popU32() (uint32_t)*(--sp)
-#define pushS32(x)  *(sp) = (int32_t)(x);sp++
-#define pushF32(x) *(sp) = (float)(x);sp++
-#define pushU32(x) *(sp) = (uint32_t)(x);sp++
-
 #define READ_VALUE(Type, p) \
     (p += sizeof(Type), *(Type*)(p - sizeof(Type)))
 #define READ_UINT32(p)  READ_VALUE(uint32_t, p)
 #define READ_BYTE(p) READ_VALUE(uint8_t, p)
 
-#define STACK_CAPACITY 100
-
-//创建操作数栈
-DEEPStack *stack_cons(void) {
-    DEEPStack *stack = (DEEPStack *) malloc(sizeof(DEEPStack));
-    if (stack == NULL) {
-        printf("Operand stack creation failed!\r\n");
-        return NULL;
-    }
-    stack->capacity = STACK_CAPACITY;
-    stack->sp = (uint32_t *) malloc(sizeof(uint32_t) * STACK_CAPACITY);
-    if (stack->sp == NULL) {
-        printf("Malloc area for stack error!\r\n");
-    }
-    stack->sp_end = stack->sp + stack->capacity;
-    return stack;
-}
-
 //执行代码块指令
-void exec_instructions(DEEPExecEnv *current_env, DEEPModule *module) {
-    uint32_t *sp = current_env->cur_frame->sp;
-    uint8_t *ip = current_env->cur_frame->function->code_begin;
-    uint8_t *ip_end = ip + current_env->cur_frame->function->code_size - 1;
-    uint32_t *memory = current_env ->memory;
+void exec_instructions(DEEPFrame* cur_frame, DEEPModule *module, uint8_t* memory) {
+    uint8_t *ip = cur_frame->ip;
+    uint8_t *ip_end = cur_frame->ip_end;
     while (ip < ip_end) {
         //提取指令码
         //立即数存在的话，提取指令码时提取立即数
@@ -271,90 +244,25 @@ void exec_instructions(DEEPExecEnv *current_env, DEEPModule *module) {
     current_env->sp = sp;
 }
 
-//调用普通函数
-void call_function(DEEPExecEnv *current_env, DEEPModule *module, int func_index) {
-
-    //为func函数创建DEEPFunction
-    DEEPFunction *func = module->func_section[func_index];
-
-    //函数类型
-    DEEPType *deepType = func->func_type;
-    int param_num = deepType->param_count;
-    int ret_num = deepType->ret_count;
-
-//    current_env->sp-=param_num;//操作数栈指针下移
-    current_env->local_vars = (uint32_t *) malloc(sizeof(uint32_t) * param_num);
-    int vars_temp = param_num;
-    while (vars_temp > 0) {
-        int temp = *(--current_env->sp);
-        current_env->local_vars[(vars_temp--) - 1] = temp;
-    }
-
-    //局部变量组
-    LocalVars **locals = func->localvars;
-
-    //为func函数创建帧
-    DEEPInterpFrame *frame = (DEEPInterpFrame *) malloc(sizeof(DEEPInterpFrame));
-    if (frame == NULL) {
-        printf("Malloc area for normal_frame error!\r\n");
-    }
-    //初始化
-    frame->sp = current_env->sp;
-    frame->function = func;
-    frame->prev_frame = current_env->cur_frame;
-
-    //更新env中内容
-    current_env->cur_frame = frame;
-
-    //执行frame中函数
-    //sp要下移，栈顶元素即为函数参数
-    exec_instructions(current_env, module);
-
-    //执行完毕退栈
-    current_env->cur_frame = frame->prev_frame;
-    //释放掉局部变量
-    free(current_env->local_vars);
-    free(frame);
-    return;
-}
-
-//为main函数创建帧，执行main函数
-int32_t call_main(DEEPExecEnv *current_env, DEEPModule *module) {
-
-    //create DEEPFunction for main
-    //find the index of main
-    int main_index = -1;
-    int export_count = module->export_count;
-    for (int i = 0; i < export_count; i++) {
+//找到main函数的索引
+int32_t find_main_index(DEEPModule *module) {
+    int32_t main_index = -1;
+    int32_t export_count = module->export_count;
+    for (int32_t i = 0; i < export_count; i++) {
         if (strcmp((module->export_section[i])->name, "main") == 0) {
             main_index = module->export_section[i]->index;
+            return main_index;
         }
     }
-    if (main_index < 0) {
-        printf("the main function index failed!\r\n");
-        return -1;
-    }
+    return main_index;
+}
 
-    //为main函数创建DEEPFunction
-    DEEPFunction *main_func = module->func_section[main_index];//module.start_index记录了main函数索引
-
-    //为main函数创建帧
-    DEEPInterpFrame *main_frame = (DEEPInterpFrame *) malloc(sizeof(struct DEEPInterpFrame));
-    if (main_frame == NULL) {
-        printf("Malloc area for main_frame error!\r\n");
-    }
-    //初始化
-    main_frame->sp = current_env->sp;
-    main_frame->function = main_func;
-
-    //更新env中内容
-    current_env->cur_frame = main_frame;
-
-    //执行frame中函数
-    //sp要下移，栈顶元素即为函数参数
-    exec_instructions(current_env, module);
-    free(main_frame);
-
-    //返回栈顶元素
-    return *(current_env->sp - 1);
+//初始化某个函数，主要是初始化ip指针，返回栈帧
+DEEPFrame* init_func(uint32_t index, DEEPModule *module) {
+    DEEPFrame* cur_frame = (DEEPFrame*)malloc(sizeof(DEEPFrame));
+    cur_frame->perv_frm = NULL;
+    cur_frame->ip = module->func_section[index]->code_begin;
+    cur_frame->ip_end = cur_frame->ip + module->func_section[index]->code_size - 1;
+    //TODO:局部变量的初始化
+    return cur_frame;
 }

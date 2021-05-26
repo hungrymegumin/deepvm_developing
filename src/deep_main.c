@@ -7,6 +7,8 @@
 #include "deep_log.h"
 
 #define WASM_FILE_SIZE 1024
+#define MAX_STACK_SIZE 100
+#define MAX_GLOBAL_COUNT 100
 
 int32_t main(int argv, char **args) {
     char *path;
@@ -37,26 +39,23 @@ int32_t main(int argv, char **args) {
         error("load fail.");
         return -1;
     }
-    //创建操作数栈
-    DEEPStack *stack = stack_cons();
-    //先声明环境并初始化
-    DEEPExecEnv deep_env;
-    DEEPExecEnv *current_env = &deep_env;
-    current_env->sp_end = stack->sp_end;
-    current_env->sp = stack->sp;
-    current_env->global_vars = (uint32_t *) malloc(sizeof(uint32_t) * 100);
-    current_env->memory = init_memory(1);
-    int32_t ans = call_main(current_env, module);
 
-    printf("%d\n", ans);
+    //初始化虚拟机环境
+    AnyData operand_stack[MAX_STACK_SIZE];
+    int32_t sp = 0;
+    uint8_t* memory = init_memory(1);
+    AnyData global_vars[MAX_GLOBAL_COUNT];
+    int32_t main_index = find_main_index(module);
+    DEEPFrame* cur_frame = init_func(main_index, module);
+    exec_instructions(cur_frame, module);
+
+    AnyData ans = operand_stack[sp];
+    printf("%d\n", ans.value);
     fflush(stdout);
 
     /* release memory */
     fclose(fp);
-    free(stack);
+    free(cur_frame);
     free(module);
-    free(current_env->global_vars);
-    free(q);
-    p = NULL;
     return 0;
 }
