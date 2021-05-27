@@ -7,14 +7,6 @@
 
 #include "deep_loader.h"
 
-#define MAX_STACK_SIZE 100
-#define MAX_GLOBAL_COUNT 100
-
-extern AnyData operand_stack[MAX_STACK_SIZE];
-extern int32_t sp = 0;
-extern uint8_t* memory;
-extern AnyData global_vars[MAX_GLOBAL_COUNT];
-
 typedef struct AnyData {
     uint8_t data_type;
     union {

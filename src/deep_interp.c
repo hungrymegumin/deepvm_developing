@@ -18,10 +18,10 @@
 #define MAX_STACK_SIZE 100
 #define MAX_GLOBAL_COUNT 100
 
-AnyData operand_stack[MAX_STACK_SIZE];
-int32_t sp = 0;
-uint8_t* memory;
-AnyData global_vars[MAX_GLOBAL_COUNT];
+extern AnyData operand_stack[MAX_STACK_SIZE];
+extern int32_t sp = 0;
+extern uint8_t* memory;
+extern AnyData global_vars[MAX_GLOBAL_COUNT];
 
 //执行代码块指令
 void exec_instructions(DEEPFrame* cur_frame, DEEPModule *module, uint8_t* memory) {

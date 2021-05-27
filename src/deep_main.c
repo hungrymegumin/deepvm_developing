@@ -7,6 +7,13 @@
 #include "deep_log.h"
 
 #define WASM_FILE_SIZE 1024
+#define MAX_STACK_SIZE 100
+#define MAX_GLOBAL_COUNT 100
+
+AnyData operand_stack[MAX_STACK_SIZE];
+int32_t sp = 0;
+uint8_t* memory;
+AnyData global_vars[MAX_GLOBAL_COUNT];
 
 int32_t main(int argv, char **args) {
     char *path;
