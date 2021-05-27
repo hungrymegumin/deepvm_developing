@@ -10,6 +10,11 @@
 #define MAX_STACK_SIZE 100
 #define MAX_GLOBAL_COUNT 100
 
+AnyData operand_stack[MAX_STACK_SIZE];
+int32_t sp = 0;
+uint8_t* memory;
+AnyData global_vars[MAX_GLOBAL_COUNT];
+
 int32_t main(int argv, char **args) {
     char *path;
     if(argv==1){
@@ -41,13 +46,10 @@ int32_t main(int argv, char **args) {
     }
 
     //初始化虚拟机环境
-    AnyData operand_stack[MAX_STACK_SIZE];
-    int32_t sp = 0;
-    uint8_t* memory = init_memory(1);
-    AnyData global_vars[MAX_GLOBAL_COUNT];
+    memory = init_memory(1);
     int32_t main_index = find_main_index(module);
     DEEPFrame* cur_frame = init_func(main_index, module);
-    exec_instructions(cur_frame, module);
+    exec_instructions(cur_frame, module, memory);
 
     AnyData ans = operand_stack[sp];
     printf("%d\n", ans.value);
