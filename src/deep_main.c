@@ -7,13 +7,6 @@
 #include "deep_log.h"
 
 #define WASM_FILE_SIZE 1024
-#define MAX_STACK_SIZE 100
-#define MAX_GLOBAL_COUNT 100
-
-AnyData operand_stack[MAX_STACK_SIZE];
-int32_t sp = 0;
-uint8_t* memory;
-AnyData global_vars[MAX_GLOBAL_COUNT];
 
 int32_t main(int argv, char **args) {
     char *path;
@@ -50,7 +43,7 @@ int32_t main(int argv, char **args) {
     int32_t main_index = find_main_index(module);
     DEEPFrame* cur_frame = init_func(main_index, module);
     exec_instructions(cur_frame, module, memory);
-
+    AnyData A = pop();
     AnyData ans = operand_stack[sp];
     printf("%d\n", ans.value);
     fflush(stdout);

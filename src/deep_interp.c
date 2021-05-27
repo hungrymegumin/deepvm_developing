@@ -15,6 +15,14 @@
 #define READ_UINT32(p)  READ_VALUE(uint32_t, p)
 #define READ_BYTE(p) READ_VALUE(uint8_t, p)
 
+#define MAX_STACK_SIZE 100
+#define MAX_GLOBAL_COUNT 100
+
+AnyData operand_stack[MAX_STACK_SIZE];
+int32_t sp = 0;
+uint8_t* memory;
+AnyData global_vars[MAX_GLOBAL_COUNT];
+
 //执行代码块指令
 void exec_instructions(DEEPFrame* cur_frame, DEEPModule *module, uint8_t* memory) {
     uint8_t *ip = cur_frame->ip;
