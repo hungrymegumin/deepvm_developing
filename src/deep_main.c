@@ -12,7 +12,7 @@
 
 AnyData operand_stack[MAX_STACK_SIZE];
 int32_t sp = 0;
-uint8_t* memory;
+uint8_t *memory;
 AnyData global_vars[MAX_GLOBAL_COUNT];
 
 int32_t main(int argv, char **args) {
@@ -48,10 +48,10 @@ int32_t main(int argv, char **args) {
     //初始化虚拟机环境
     memory = init_memory(1);
     int32_t main_index = find_main_index(module);
-    DEEPFrame* cur_frame = init_func(main_index, module);
-    exec_instructions(cur_frame, module, memory);
-    AnyData A = pop();
-    AnyData ans = operand_stack[sp];
+    DEEPFrame *cur_frame = init_func(main_index, module, NULL);
+
+    exec_instructions(cur_frame, module);
+    AnyData ans = operand_stack[sp - 1];
     printf("%d\n", ans.value);
     fflush(stdout);
 
