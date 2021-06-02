@@ -147,23 +147,23 @@ void exec_instructions(DEEPFrame *cur_frame, DEEPModule *module) {
             }
             case i32_add: {
                 ip++;
-                uint32_t a = popU32();
-                uint32_t b = popU32();
-                pushU32(a + b);
+                int32_t a = popS32();
+                int32_t b = popS32();
+                pushS32(a + b);
                 break;
             }
             case i32_sub: {
                 ip++;
-                uint32_t a = popU32();
-                uint32_t b = popU32();
-                pushU32(b - a);
+                int32_t a = popS32();
+                int32_t b = popS32();
+                pushS32(b - a);
                 break;
             }
             case i32_mul: {
                 ip++;
-                uint32_t a = popU32();
-                uint32_t b = popU32();
-                pushU32(b * a);
+                int32_t a = popS32();
+                int32_t b = popS32();
+                pushS32(b * a);
                 break;
             }
             case i32_divs: {
@@ -182,8 +182,8 @@ void exec_instructions(DEEPFrame *cur_frame, DEEPModule *module) {
             }
             case i32_const: {
                 ip++;
-                uint32_t temp = read_leb_u32(&ip);
-                pushU32(temp);
+                int32_t temp = read_leb_i32(&ip);
+                pushS32(temp);
                 break;
             }
             case f32_const: {
@@ -201,23 +201,23 @@ void exec_instructions(DEEPFrame *cur_frame, DEEPModule *module) {
             }
             case i32_and: {
                 ip++;
-                uint32_t a = popU32();
-                uint32_t b = popU32();
-                pushU32(b & a);
+                int32_t a = popS32();
+                int32_t b = popS32();
+                pushS32(b & a);
                 break;
             }
             case i32_or: {
                 ip++;
-                uint32_t a = popU32();
-                uint32_t b = popU32();
-                pushU32(b | a);
+                int32_t a = popS32();
+                int32_t b = popS32();
+                pushS32(b | a);
                 break;
             }
             case i32_xor: {
                 ip++;
-                uint32_t a = popU32();
-                uint32_t b = popU32();
-                pushU32(b ^ a);
+                int32_t a = popS32();
+                int32_t b = popS32();
+                pushS32(b ^ a);
                 break;
             }
             case i32_shl: {
