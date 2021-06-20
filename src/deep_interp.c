@@ -45,7 +45,7 @@ void exec_instructions(DEEPExecEnv *current_env, DEEPModule *module) {
     uint32_t *sp = current_env->cur_frame->sp;
     uint8_t *ip = current_env->cur_frame->function->code_begin;
     uint8_t *ip_end = ip + current_env->cur_frame->function->code_size - 1;
-    uint32_t *memory = current_env ->memory;
+    uint8_t *memory = current_env ->memory;
     while (ip < ip_end) {
         //提取指令码
         //立即数存在的话，提取指令码时提取立即数

@@ -25,7 +25,7 @@ uint32_t read_leb_u32(uint8_t** p) {
 	for (int32_t i = 0; i < 10; i++) {
 		res |= (buf[i] & 0x7f) << (i * 7); 
 		if ((buf[i] & 0x80) == 0) {
-			*p += i + 1;
+			*p += (i + 1);
 			return res;
 		}
 	}
@@ -70,6 +70,7 @@ static section_listnode* create_section_list(const uint8_t** p, int32_t size) {
 	const uint8_t *buf = *p, *buf_end = buf + size;
 	section_listnode* section_list = NULL;
 	section_listnode* current_section = NULL;
+	printf("size:%d\r\n", size);
 	while (buf < buf_end) {
 		section_listnode* section = (section_listnode*)malloc(sizeof(section_listnode));
 		memset(section, 0, sizeof(section_listnode));
@@ -83,10 +84,13 @@ static section_listnode* create_section_list(const uint8_t** p, int32_t size) {
 		buf += section->section_size;
 		current_section->next = section;
 		current_section       = section;
+		printf("buf:%p, buf_end:%p, section_size:%d\r\n",buf, buf_end, section->section_size);
 	}
-	if (buf == buf_end)
-		return section_list;
-	return NULL;
+	if (buf != buf_end) {
+		error("buf:%p, buf_end:%p", buf, buf_end);
+		return NULL;
+	}
+	return section_list;
 }
 
 //读取类型段
@@ -300,51 +304,47 @@ static void write_memory(uint8_t* mem, uint8_t* src, uint32_t offset, uint32_t s
 }
 
 uint8_t read_mem8(uint8_t* mem, uint32_t offset) {
-    uint8_t buf[1];
-    read_memory(mem, buf, offset, 1);
-    return buf[0];
+    uint8_t buf = 0;
+    read_memory(mem, &buf, offset, 1);
+    return buf;
 }
 
 uint16_t read_mem16(uint8_t* mem, uint32_t offset) {
-    uint16_t buf[1];
-    read_memory(mem, buf, offset, 2);
-    return buf[0];
+    uint16_t buf = 0;
+    read_memory(mem, (uint8_t *) &buf, offset, 2);
+    return buf;
 }
 
 uint32_t read_mem32(uint8_t* mem, uint32_t offset) {
-    uint32_t buf[1];
-    read_memory(mem, buf, offset, 4);
-    return buf[0];
+    uint32_t buf = 0;
+    read_memory(mem, (uint8_t *) &buf, offset, 4);
+    return buf;
 }
 
 uint64_t read_mem64(uint8_t* mem, uint32_t offset) {
-    uint64_t buf[1];
-    read_memory(mem, buf, offset, 8);
-    return buf[0];
+    uint64_t buf = 0;
+    read_memory(mem, (uint8_t *) &buf, offset, 8);
+    return buf;
 }
 
 void write_mem8(uint8_t* mem, uint8_t val, uint32_t offset) {
-	uint8_t buf[1];
-	buf[0] = val;
-	write_memory(mem, buf, offset, 1);
+	uint8_t buf = val;
+	write_memory(mem, (uint8_t *) &buf, offset, 1);
 }
 
 void write_mem16(uint8_t* mem, uint16_t val, uint32_t offset) {
-	uint16_t buf[1];
-	buf[0] = val;
-	write_memory(mem, buf, offset, 2);
+	uint8_t buf = val;
+	write_memory(mem, (uint8_t *) &buf, offset, 2);
 }
 
 void write_mem32(uint8_t* mem, uint32_t val, uint32_t offset) {
-	uint32_t buf[1];
-	buf[0] = val;
-	write_memory(mem, buf, offset, 4);
+	uint8_t buf = val;
+	write_memory(mem, (uint8_t *) &buf, offset, 4);
 }
 
 void write_mem64(uint8_t* mem, uint64_t val, uint32_t offset) {
-	uint64_t buf[1];
-	buf[0] = val;
-	write_memory(mem, buf, offset, 8);
+	uint8_t buf = val;
+	write_memory(mem, (uint8_t *) &buf, offset, 8);
 }
 
 // DEEPModule* module = deep_load(&p, size);
